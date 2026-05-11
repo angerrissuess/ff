@@ -589,11 +589,11 @@ system.bootstrap().catch(err => console.error(err));`;
 // --- SOCIAL LINKS COMPONENT ---
 const SocialLinks: React.FC = () => {
   const links = [
-    { name: 'GitHub', icon: <Github size={18} />, url: 'https://github.com/angerr-issuess', color: 'hover:text-white hover:bg-white/10 text-white/70' },
+    { name: 'GitHub', icon: <Github size={18} />, url: 'https://github.com/angerrissuess', color: 'hover:text-white hover:bg-white/10 text-white/70' },
     { name: 'Telegram', icon: <Send size={18} />, url: 'https://t.me/angerr_issuess', color: 'hover:text-[#0088cc] hover:bg-[#0088cc]/10 text-white/70' },
-    { name: 'Twitch', icon: <Twitch size={18} />, url: 'https://twitch.tv/', color: 'hover:text-[#9146FF] hover:bg-[#9146FF]/10 text-white/70' },
+    { name: 'Twitch', icon: <Twitch size={18} />, url: 'https://www.twitch.tv/angerr_issues', color: 'hover:text-[#9146FF] hover:bg-[#9146FF]/10 text-white/70' },
     { name: 'YouTube', icon: <Youtube size={18} />, url: 'https://youtube.com/', color: 'hover:text-[#FF0000] hover:bg-[#FF0000]/10 text-white/70' },
-    { name: 'Steam', icon: <Gamepad2 size={18} />, url: 'https://steamcommunity.com/', color: 'hover:text-[#66c0f4] hover:bg-[#66c0f4]/10 text-white/70' },
+    { name: 'Steam', icon: <Gamepad2 size={18} />, url: 'https://steamcommunity.com/profiles/76561199195996931/', color: 'hover:text-[#66c0f4] hover:bg-[#66c0f4]/10 text-white/70' },
   ];
 
   return (
@@ -872,18 +872,8 @@ const send = async () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Title": "Neural Architect OS",
         },
-        body: JSON.stringify({
-          model: "openai/gpt-4o-mini",
-          messages: [
-            { role: "system", content: config.systemInstruction },
-            { role: "user", content: userMsg }
-          ],
-          stream: false,
-          temperature: config.temperature,
-          top_p: config.topP,
-        }),
+        body: JSON.stringify({ message: userMsg }),
       });
 
       if (!response.ok) {
@@ -891,7 +881,7 @@ const send = async () => {
         throw new Error(`HTTP error! status: ${response.status} ${text}`);
       }
 
-      const data = await response.json().catch(() => null);
+      const data: any = await response.json().catch(() => null);
       let reply = '';
       if (data) {
         const anyData: any = data;

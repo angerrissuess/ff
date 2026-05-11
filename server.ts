@@ -189,6 +189,21 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
     try {
       const apiKey = process.env.OPENROUTER_API_KEY;
       if (!apiKey) return res.status(500).json({ error: 'OpenRouter API key not configured on server' });
+      // Accept either full OpenRouter body or shorthand { message: string }
+      const incoming: any = req.body || {};
+      let upstreamBody: any = incoming;
+      if (typeof incoming.message === 'string' && !incoming.messages) {
+        upstreamBody = {
+          model: process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini',
+          messages: [
+            { role: 'system', content: (process.env.OPENROUTER_SYSTEM_INSTRUCTION || 'You are a helpful assistant.') },
+            { role: 'user', content: incoming.message }
+          ],
+          stream: false,
+          temperature: incoming.temperature ?? 0.9,
+          top_p: incoming.top_p ?? 0.95
+        };
+      }
 
       const upstream = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -196,7 +211,7 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(req.body),
+        body: JSON.stringify(upstreamBody),
         // no redirect
       });
 
@@ -204,9 +219,9 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
       // Try to forward JSON if possible
       try {
         const json = JSON.parse(text);
-        res.status(upstream.status).json(json);
+        return res.status(upstream.status).json(json);
       } catch (_e) {
-        res.status(upstream.status).type('text/plain').send(text);
+        return res.status(upstream.status).type('text/plain').send(text);
       }
     } catch (error) {
       console.error('Error proxying OpenRouter request:', error);
