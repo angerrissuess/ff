@@ -1131,85 +1131,83 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // 2. Умная функция создания окон с учетом устройства
-  const getInitialWindows = (): Record<string, WindowState> => {
-    const sw = window.innerWidth;
-    const sh = window.innerHeight;
+const getInitialWindows = (): Record<string, WindowState> => {
+  const sw = window.innerWidth;
+  const sh = window.innerHeight;
+  const mobilePos = { x: 0, y: 0 };
+  const mobileSize = { width: sw, height: sh - 130 };
 
-    // Настройки для мобилки (окно на весь экран)
-    const mobilePos = { x: 0, y: 0 };
-    const mobileSize = { width: sw, height: sh - 130 }; // Оставляем место под шапку и док
-
-    return {
-      guestbook: {
-        id: 'guestbook', title: 'Guestbook — Отзывы', icon: <MessageSquare size={14} />,
-        isOpen: !isMobileView,
-        isMinimized: false, isMaximized: isMobileView, zIndex: 11,
-        position: isMobileView ? mobilePos : { x: 540, y: 20 },
-        size: isMobileView ? mobileSize : { width: 500, height: 600 },
-        component: null
-      },
-      social: { 
-        id: 'social', title: 'Connections', icon: <Globe size={14} />,
-        isOpen: !isMobileView,
-        isMinimized: false, isMaximized: isMobileView, zIndex: 4,
-        position: isMobileView ? mobilePos : { x: 1060, y: 300 },
-        size: isMobileView ? mobileSize : { width: 280, height: 400 }, 
-        component: null
-      },
-      terminal: { 
-        id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
-        isOpen: true, isMinimized: false, isMaximized: isMobileView, zIndex: 10,
-        position: isMobileView ? mobilePos : { x: 20, y: 20 },
-        size: isMobileView ? mobileSize : { width: 500, height: 350 },
-        component: null
-      },
-      btop: { 
-        id: 'btop', title: 'btop++ - system monitor', icon: <Activity size={14} />,
-        isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 6,
-        position: isMobileView ? mobilePos : { x: 100, y: 100 },
-        size: isMobileView ? mobileSize : { width: 400, height: 420 },
-        component: null 
-      },
-      code: { 
-        id: 'code', title: 'VS Code - neural_core.ts', icon: <Code size={14} />,
-        isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 7,
-        position: isMobileView ? mobilePos : { x: 150, y: 150 },
-        size: isMobileView ? mobileSize : { width: 600, height: 450 },
-        component: null
-      },
-      music: { 
-        id: 'music', title: 'Music Player', icon: <Music size={14} />,
-        isOpen: !isMobileView, // На мобилке скрываем при старте для чистоты
-        isMinimized: false, isMaximized: isMobileView, zIndex: 5,
-        position: isMobileView ? mobilePos : { x: 1060, y: 20 },
-        size: isMobileView ? mobileSize : { width: 280, height: 260 },
-        component: null
-      },
-      notepad: { 
-        id: 'notepad', title: 'Brain_Dump.txt', icon: <FileText size={14} />,
-        isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 2,
-        position: isMobileView ? mobilePos : { x: 200, y: 200 },
-        size: isMobileView ? mobileSize : { width: 350, height: 320 },
-        component: null
-      },
-      chat: { 
-        id: 'chat', title: 'Network_Chat v2.0', icon: <MessageSquare size={14} />,
-        isOpen: !isMobileView,
-        isMinimized: false, isMaximized: isMobileView, zIndex: 1,
-        position: isMobileView ? mobilePos : { x: 20, y: 390 },
-        size: isMobileView ? mobileSize : { width: 500, height: 310 },
-        component: null
-      },
-      cava: {
-        id: 'cava', title: 'CAVA_SPECTROGRAM', icon: <Disc size={14} />,
-        isOpen: !isMobileView,
-        isMinimized: false, isMaximized: isMobileView, zIndex: 0,
-        position: isMobileView ? mobilePos : { x: 540, y: 640 },
-        size: isMobileView ? mobileSize : { width: 500, height: 100 },
-        component: null
-      }
-    };
+  return {
+    social: { 
+      id: 'social', title: 'Connections', icon: <Globe size={14} />,
+      isOpen: true, // Сделаем его открытым сразу
+      isMinimized: false, isMaximized: isMobileView, zIndex: 20,
+      position: isMobileView ? mobilePos : { x: 1060, y: 300 },
+      size: isMobileView ? mobileSize : { width: 280, height: 400 }, 
+      component: null
+    },
+    terminal: { 
+      id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
+      isOpen: true, isMinimized: false, isMaximized: isMobileView, zIndex: 10,
+      position: isMobileView ? mobilePos : { x: 20, y: 20 },
+      size: isMobileView ? mobileSize : { width: 500, height: 350 },
+      component: null
+    },
+    guestbook: {
+      id: 'guestbook', title: 'Guestbook — Отзывы', icon: <MessageSquare size={14} />,
+      isOpen: !isMobileView,
+      isMinimized: false, isMaximized: isMobileView, zIndex: 11,
+      position: isMobileView ? mobilePos : { x: 540, y: 20 },
+      size: isMobileView ? mobileSize : { width: 500, height: 600 },
+      component: null
+    },
+    btop: { 
+      id: 'btop', title: 'btop++ - system monitor', icon: <Activity size={14} />,
+      isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 6,
+      position: isMobileView ? mobilePos : { x: 100, y: 100 },
+      size: isMobileView ? mobileSize : { width: 400, height: 420 },
+      component: null 
+    },
+    code: { 
+      id: 'code', title: 'VS Code - neural_core.ts', icon: <Code size={14} />,
+      isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 7,
+      position: isMobileView ? mobilePos : { x: 150, y: 150 },
+      size: isMobileView ? mobileSize : { width: 600, height: 450 },
+      component: null
+    },
+    music: { 
+      id: 'music', title: 'Music Player', icon: <Music size={14} />,
+      isOpen: !isMobileView,
+      isMinimized: false, isMaximized: isMobileView, zIndex: 5,
+      position: isMobileView ? mobilePos : { x: 1060, y: 20 },
+      size: isMobileView ? mobileSize : { width: 280, height: 260 },
+      component: null
+    },
+    notepad: { 
+      id: 'notepad', title: 'Brain_Dump.txt', icon: <FileText size={14} />,
+      isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 2,
+      position: isMobileView ? mobilePos : { x: 200, y: 200 },
+      size: isMobileView ? mobileSize : { width: 350, height: 320 },
+      component: null
+    },
+    chat: { 
+      id: 'chat', title: 'Network_Chat v2.0', icon: <MessageSquare size={14} />,
+      isOpen: !isMobileView,
+      isMinimized: false, isMaximized: isMobileView, zIndex: 1,
+      position: isMobileView ? mobilePos : { x: 20, y: 390 },
+      size: isMobileView ? mobileSize : { width: 500, height: 310 },
+      component: null
+    },
+    cava: {
+      id: 'cava', title: 'CAVA_SPECTROGRAM', icon: <Disc size={14} />,
+      isOpen: !isMobileView,
+      isMinimized: false, isMaximized: isMobileView, zIndex: 0,
+      position: isMobileView ? mobilePos : { x: 540, y: 640 },
+      size: isMobileView ? mobileSize : { width: 500, height: 100 },
+      component: null
+    }
   };
+};
 
   const [windows, setWindows] = useState<Record<string, WindowState>>(getInitialWindows());
 
@@ -1318,96 +1316,96 @@ export default function App() {
     setIsPlaying(false);
   };
 
-  if (isMobileView) {
-    const activeWin = windows[activeWindow];
-    return (
-      <div className="relative w-full h-screen bg-black overflow-hidden select-none font-sans flex flex-col text-white">
-        <div className="fixed inset-0 scanlines pointer-events-none opacity-10 z-[100]"></div>
-        
-        <header className="h-16 bg-[#0d0d12] border-b border-white/10 flex items-center justify-between px-4 shrink-0 z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full border border-outline/30 bg-surface-bright overflow-hidden">
-              <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix" alt="USER_01" className="w-full h-full object-cover grayscale brightness-50" />
-            </div>
-            <div className="font-mono">
-              <div className="text-lg font-bold text-primary leading-none tracking-tighter">ARCH_ISSUESS_01</div>
-              <div className="text-[9px] text-primary flex items-center gap-1.5 mt-1 font-bold tracking-widest">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span> SYSTEM_LIVE
-              </div>
+if (isMobileView) {
+  const activeWin = windows[activeWindow];
+  return (
+    // ПРАВКА: h-[100dvh] вместо h-screen спасет от перекрытия панелью браузера
+    <div className="relative w-full h-[100dvh] bg-black overflow-hidden select-none font-sans flex flex-col text-white">
+      {/* Сканлайны уносим на z-0 или даем навигации индекс ВЫШЕ */}
+      <div className="fixed inset-0 scanlines pointer-events-none opacity-10 z-[50]"></div>
+      
+      <header className="h-16 bg-[#0d0d12] border-b border-white/10 flex items-center justify-between px-4 shrink-0 z-[110]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full border border-outline/30 bg-surface-bright overflow-hidden">
+            <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Felix" alt="USER_01" className="w-full h-full object-cover grayscale brightness-50" />
+          </div>
+          <div className="font-mono">
+            <div className="text-lg font-bold text-primary leading-none tracking-tighter">ARCH_ISSUESS_01</div>
+            <div className="text-[9px] text-primary flex items-center gap-1.5 mt-1 font-bold tracking-widest">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span> SYSTEM_LIVE
             </div>
           </div>
-          <button 
-            onClick={() => setIsMobileView(false)}
-            className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+        </div>
+        <button 
+          onClick={() => setIsMobileView(false)}
+          className="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+        >
+          <Monitor size={18} />
+        </button>
+      </header>
+
+       <main className="flex-1 overflow-hidden relative z-10 bg-[#050505]">
+        <AnimatePresence mode="wait">
+          {/* Контент активного окна */}
+          <motion.div 
+            key={activeWin.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="w-full h-full"
           >
-            <Monitor size={18} />
+            {activeWin.id === 'music' ? (
+              <MusicPlayer songs={songs} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
+            ) : activeWin.id === 'social' ? (
+              <SocialLinks />
+            ) : activeWin.id === 'guestbook' ? (
+              <Guestbook />
+            ) : activeWin.id === 'btop' ? (
+              <Btop windows={windows} />
+            ) : activeWin.id === 'terminal' ? (
+              <Terminal />
+            ) : activeWin.id === 'code' ? (
+              <CodeEditor />
+            ) : activeWin.id === 'notepad' ? (
+              <Notepad />
+            ) : activeWin.id === 'chat' ? (
+              <NetworkChat />
+            ) : (
+              <div className="p-10 text-center text-primary/20 font-mono tracking-tighter text-2xl">FILE_NOT_FOUND</div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+
+{/* ПРАВКА: z-[110], чтобы быть выше сканлайнов */}
+      <nav className="h-20 bg-[#0d0d12] border-t border-white/10 flex items-center justify-between px-2 overflow-x-auto custom-scrollbar shrink-0 z-[110] pb-safe">
+        {Object.values(windows).map(win => (
+          <button
+            key={win.id}
+            onPointerDown={(e) => {
+              // Используем onPointerDown для мгновенного отклика на тач
+              if (!win.isOpen) {
+                setWindows(prev => ({ ...prev, [win.id]: { ...prev[win.id], isOpen: true, isMinimized: false } }));
+              }
+              setActiveWindow(win.id);
+            }}
+            className={`flex-shrink-0 flex flex-col items-center justify-center w-16 h-14 rounded-xl transition-all ${
+              activeWindow === win.id 
+                ? 'bg-white/20 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' 
+                : 'bg-white/5 text-on-surface-variant hover:bg-white/10'
+            }`}
+          >
+            {win.icon}
+            <span className="text-[8px] font-mono mt-1 uppercase tracking-wider truncate w-full text-center px-1">
+              {win.id}
+            </span>
           </button>
-        </header>
-
-        <main className="flex-1 overflow-hidden relative z-10 bg-[#050505]">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={activeWin.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="w-full h-full"
-            >
-              {activeWin.id === 'music' ? (
-                <MusicPlayer songs={songs} isPlaying={isPlaying} setIsPlaying={setIsPlaying} />
-              ) : activeWin.id === 'cava' ? (
-                <div className="p-4 h-full">
-                  <MusicVisualizer isPlaying={isPlaying} bars={20} />
-                </div>
-              ) : activeWin.id === 'btop' ? (
-                <Btop windows={windows} />
-              ) : activeWin.id === 'terminal' ? (
-                <Terminal />
-              ) : activeWin.id === 'code' ? (
-                <CodeEditor />
-              ) : activeWin.id === 'social' ? (
-                <SocialLinks />
-              ) : activeWin.id === 'notepad' ? (
-                <Notepad />
-              ) : activeWin.id === 'chat' ? (
-                <NetworkChat />
-              ) : activeWin.id === 'guestbook' ? ( 
-               <Guestbook />                     
-              ) : (
-                <div className="p-10 text-center text-primary/20 font-mono tracking-tighter text-2xl">FILE_NOT_FOUND</div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-
-        <nav className="h-16 bg-[#0d0d12] border-t border-white/10 flex items-center justify-between px-2 overflow-x-auto custom-scrollbar shrink-0 z-10">
-          {Object.values(windows).map(win => (
-            <button
-              key={win.id}
-              onClick={() => {
-                if (!win.isOpen) {
-                   setWindows(prev => ({ ...prev, [win.id]: { ...prev[win.id], isOpen: true, isMinimized: false } }));
-                }
-                setActiveWindow(win.id);
-              }}
-              className={`flex-shrink-0 flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${
-                activeWindow === win.id 
-                  ? 'bg-white/20 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' 
-                  : 'bg-white/5 text-on-surface-variant hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              {win.icon}
-              <span className="text-[8px] font-mono mt-1 uppercase tracking-wider truncate w-full text-center px-1">
-                {win.id}
-              </span>
-            </button>
-          ))}
-        </nav>
-      </div>
-    );
-  }
-
+        ))}
+      </nav>
+    </div>
+  );
+}
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden select-none font-sans cursor-default">
       <div className="fixed inset-0 scanlines pointer-events-none opacity-10 z-[100]"></div>
