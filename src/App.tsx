@@ -798,13 +798,18 @@ const MusicPlayer: React.FC<{ songs: Song[]; isPlaying: boolean; setIsPlaying: (
       setIsPlaying(false);
     }
   };
-
-  const handleSeek = (e: React.MouseEvent) => {
-    if (progressBarRef.current && audioRef.current && audioRef.current.duration) {
+const handleSeek = (e: React.MouseEvent | React.TouchEvent) => {
+    if (progressBarRef.current && audioRef.current && Number.isFinite(audioRef.current.duration)) {
       const rect = progressBarRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
+      
+      // Определяем координату X клика/тапа
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+      
+      const x = clientX - rect.left;
       const width = rect.width;
       const percentage = Math.max(0, Math.min(1, x / width));
+      
+      // Устанавливаем время в аудио-элементе
       audioRef.current.currentTime = percentage * audioRef.current.duration;
     }
   };
@@ -840,19 +845,29 @@ const MusicPlayer: React.FC<{ songs: Song[]; isPlaying: boolean; setIsPlaying: (
 
       <MusicVisualizer isPlaying={isPlaying} />
       
-      <div className="space-y-3">
+ <div className="space-y-3">
+        {/* Контейнер прогресс-бара */}
         <div 
           ref={progressBarRef}
-          onClick={handleSeek}
-          className="relative h-2 bg-white/10 rounded-full overflow-hidden cursor-pointer group/seek"
+          onMouseDown={handleSeek} 
+          onTouchStart={handleSeek}
+          className="relative h-4 flex items-center cursor-pointer group/seek" 
         >
-          <motion.div 
-            animate={{ scaleX: Number.isFinite(progress) ? progress / 100 : 0 }}
-            style={{ transformOrigin: "left" }}
-            className="absolute top-0 left-0 h-full w-full bg-primary shadow-[0_0_8px_white]"
-          />
-          <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/seek:opacity-100 transition-opacity" />
+          {/* Фоновая подложка (серая линия) */}
+          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative">
+            {/* Активная линия прогресса (белая/цветная) */}
+            <motion.div 
+              animate={{ scaleX: Number.isFinite(progress) ? progress / 100 : 0 }}
+              style={{ transformOrigin: "left" }}
+              className="absolute top-0 left-0 h-full w-full bg-primary shadow-[0_0_8px_white]"
+            />
+          </div>
+
+          {/* Область наведения (подсветка при ховере) */}
+          <div className="absolute inset-0 bg-white/0 group-hover/seek:bg-white/5 rounded-full transition-colors" />
         </div>
+
+        {/* Тайм-коды */}
         <div className="flex justify-between text-[10px] text-on-surface-variant font-mono">
           <span>{audioRef.current && Number.isFinite(audioRef.current.currentTime) ? Math.floor(audioRef.current.currentTime / 60) + ':' + String(Math.floor(audioRef.current.currentTime % 60)).padStart(2, '0') : '0:00'}</span>
           <span>{audioRef.current && Number.isFinite(audioRef.current.duration) ? Math.floor(audioRef.current.duration / 60) + ':' + String(Math.floor(audioRef.current.duration % 60)).padStart(2, '0') : '0:00'}</span>
