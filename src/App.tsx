@@ -798,19 +798,29 @@ const MusicPlayer: React.FC<{ songs: Song[]; isPlaying: boolean; setIsPlaying: (
       setIsPlaying(false);
     }
   };
-const handleSeek = (e: React.MouseEvent | React.TouchEvent) => {
-    if (progressBarRef.current && audioRef.current && Number.isFinite(audioRef.current.duration)) {
-      const rect = progressBarRef.current.getBoundingClientRect();
-      
-      // Определяем координату X клика/тапа
-      const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-      
-      const x = clientX - rect.left;
-      const width = rect.width;
-      const percentage = Math.max(0, Math.min(1, x / width));
-      
-      // Устанавливаем время в аудио-элементе
-      audioRef.current.currentTime = percentage * audioRef.current.duration;
+const handleSeek = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!progressBarRef.current || !audioRef.current || !audioRef.current.duration) return;
+
+    const rect = progressBarRef.current.getBoundingClientRect();
+    let clientX: number;
+
+    // Проверяем, это тач или мышка
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+    } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+    } else {
+      clientX = (e as React.MouseEvent).clientX;
+    }
+
+    const x = clientX - rect.left;
+    const width = rect.width;
+    const percentage = Math.max(0, Math.min(1, x / width));
+    
+    // Устанавливаем время
+    const newTime = percentage * audioRef.current.duration;
+    if (!isNaN(newTime)) {
+      audioRef.current.currentTime = newTime;
     }
   };
 
@@ -849,13 +859,12 @@ const handleSeek = (e: React.MouseEvent | React.TouchEvent) => {
         {/* Контейнер прогресс-бара */}
         <div 
           ref={progressBarRef}
-          onMouseDown={handleSeek} 
-          onTouchStart={handleSeek}
-          className="relative h-4 flex items-center cursor-pointer group/seek" 
+          onClick={handleSeek} // Используем onClick для мобилок он работает стабильнее
+          className="relative h-6 flex items-center cursor-pointer group/seek touch-none" 
         >
           {/* Фоновая подложка (серая линия) */}
-          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative">
-            {/* Активная линия прогресса (белая/цветная) */}
+          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden relative pointer-events-none">
+            {/* Активная линия прогресса */}
             <motion.div 
               animate={{ scaleX: Number.isFinite(progress) ? progress / 100 : 0 }}
               style={{ transformOrigin: "left" }}
@@ -863,8 +872,8 @@ const handleSeek = (e: React.MouseEvent | React.TouchEvent) => {
             />
           </div>
 
-          {/* Область наведения (подсветка при ховере) */}
-          <div className="absolute inset-0 bg-white/0 group-hover/seek:bg-white/5 rounded-full transition-colors" />
+          {/* Область наведения (невидимая, но широкая для клика) */}
+          <div className="absolute inset-0 bg-transparent rounded-full transition-colors group-hover/seek:bg-white/5" />
         </div>
 
         {/* Тайм-коды */}
