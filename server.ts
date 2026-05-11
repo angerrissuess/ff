@@ -4,6 +4,8 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import cors from "cors";
+import { Pool } from 'pg';
+import xss from 'xss';
 import rateLimit from "express-rate-limit";
 import sanitizeFilename from "sanitize-filename";
 import dotenv from 'dotenv';
@@ -62,6 +64,7 @@ const isValidAudioFile = (filename: string): boolean => {
 
 async function startServer() {
   const app = express();
+  app.use(express.json());
 const PORT = parseInt(process.env.PORT || '3000', 10);
   
   validateEnvironment();
@@ -122,6 +125,64 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
   });
 
   // ============ API ENDPOINTS ============
+
+  // --- PostgreSQL Pool (Neon) ---
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : undefined,
+  });
+
+  // Create comments table if it doesn't exist
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        author VARCHAR(50) NOT NULL,
+        text TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ comments table ensured');
+  } catch (err) {
+    console.error('❌ Failed ensuring comments table:', err);
+  }
+
+  // GET latest 50 comments
+  app.get('/api/comments', apiLimiter, async (_req: Request, res: Response) => {
+    try {
+      const result = await pool.query('SELECT id, author, text, created_at FROM comments ORDER BY created_at DESC LIMIT 50');
+      return res.json(result.rows);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      return res.status(500).json({ error: 'Failed to fetch comments' });
+    }
+  });
+
+  // POST a new comment
+  app.post('/api/comments', apiLimiter, async (req: Request, res: Response) => {
+    try {
+      const incoming = req.body || {};
+      const author = typeof incoming.author === 'string' ? incoming.author.trim() : '';
+      const text = typeof incoming.text === 'string' ? incoming.text.trim() : '';
+
+      if (!author || !text) {
+        return res.status(400).json({ error: 'Both author and text are required' });
+      }
+
+      const cleanAuthor = xss(author);
+      const cleanText = xss(text);
+
+      const insert = await pool.query(
+        'INSERT INTO comments (author, text) VALUES ($1, $2) RETURNING id, author, text, created_at',
+        [cleanAuthor, cleanText]
+      );
+
+      return res.status(201).json(insert.rows[0]);
+    } catch (error) {
+      console.error('Error inserting comment:', error);
+      return res.status(500).json({ error: 'Failed to save comment' });
+    }
+  });
 
   // Health check endpoint
   app.get("/health", (_req: Request, res: Response) => {

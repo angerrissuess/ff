@@ -376,6 +376,105 @@ const Btop: React.FC<{ windows: Record<string, WindowState> }> = ({ windows }) =
   );
 };
 
+// --- Guestbook (Отзывы) ---
+const Guestbook: React.FC = () => {
+  const [comments, setComments] = useState<{ id: number; author: string; text: string; created_at: string }[]>([]);
+  const [author, setAuthor] = useState('');
+  const [text, setText] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const load = async () => {
+    try {
+      const res = await fetch('/api/comments');
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+      }
+    } catch (e) {
+      console.error('Failed loading comments', e);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!author.trim() || !text.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author: author.trim(), text: text.trim() })
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setComments(prev => [created, ...prev].slice(0, 50));
+        setAuthor('');
+        setText('');
+      } else {
+        console.error('Failed to post comment', await res.text());
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="p-4 h-full flex flex-col gap-3 text-white">
+      <div className="text-left">
+        <h3 className="text-lg font-bold text-primary">Отзывы</h3>
+        <p className="text-sm text-on-surface-variant">Оставьте честный отзыв. Имя обязательно.</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        <input
+          placeholder="Ваше имя..."
+          value={author}
+          onChange={e => setAuthor(e.target.value)}
+          className="bg-black/30 border border-white/5 px-3 py-2 rounded text-white placeholder-white/40"
+        />
+        <textarea
+          placeholder="Ваш отзыв..."
+          value={text}
+          onChange={e => setText(e.target.value)}
+          rows={4}
+          className="bg-black/30 border border-white/5 px-3 py-2 rounded text-white placeholder-white/40 resize-none"
+        />
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={submitting || !author.trim() || !text.trim()}
+            className="px-4 py-2 rounded bg-primary text-black font-bold disabled:opacity-50"
+          >
+            {submitting ? 'Отправка...' : 'Отправить'}
+          </button>
+        </div>
+      </form>
+
+      <div className="overflow-y-auto mt-2 flex-1 custom-scrollbar">
+        {comments.length === 0 ? (
+          <div className="text-center text-primary/40 mt-6">Пока нет отзывов.</div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {comments.map(c => (
+              <div key={c.id} className="p-3 bg-white/3 rounded border border-white/5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="text-primary font-bold">{c.author}</div>
+                  <div className="text-[11px] text-white/50">{new Date(c.created_at).toLocaleString()}</div>
+                </div>
+                <div className="text-white/90 whitespace-pre-wrap">{c.text}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Terminal: React.FC = () => {
   const [history, setHistory] = useState<string[]>(['Initializing NEURAL_ARCHITECT kernel...', 'Establishing secure link...']);
   const [input, setInput] = useState('');
@@ -1015,61 +1114,68 @@ export default function App() {
   
   const [isMobileView, setIsMobileView] = useState(false);
   
-  const getInitialWindows = (): Record<string, WindowState> => ({
+const getInitialWindows = (): Record<string, WindowState> => ({
     terminal: { 
       id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 10,
-      position: { x: 40, y: 50 },
-      size: { width: 550, height: 380 },
+      position: { x: 20, y: 20 }, // Плотно в левый верхний угол
+      size: { width: 500, height: 350 }, // Чуть уменьшил, чтобы освободить место
       component: null
     },
     btop: { 
       id: 'btop', title: 'btop++ - system monitor', icon: <Activity size={14} />,
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 6,
-      position: { x: 610, y: 50 },
+      position: { x: 100, y: 100 },
       size: { width: 400, height: 420 },
       component: null 
     },
     code: { 
       id: 'code', title: 'VS Code - neural_core.ts', icon: <Code size={14} />,
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 7,
-      position: { x: 120, y: 150 },
+      position: { x: 150, y: 150 },
       size: { width: 600, height: 450 },
       component: null
     },
     music: { 
       id: 'music', title: 'Music Player', icon: <Music size={14} />,
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 5,
-      position: { x: 1040, y: 50 },
-      size: { width: 320, height: 260 },
+      position: { x: 1060, y: 20 }, // В правый верхний угол
+      size: { width: 280, height: 260 },
       component: null
     },
     social: { 
       id: 'social', title: 'Connections', icon: <Globe size={14} />,
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 4,
-      position: { x: 1040, y: 330 },
-      size: { width: 280, height: 440 }, 
+      position: { x: 1060, y: 300 }, // Под плеером
+      size: { width: 280, height: 400 }, 
       component: null
     },
     notepad: { 
       id: 'notepad', title: 'Brain_Dump.txt', icon: <FileText size={14} />,
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 2,
-      position: { x: 40, y: 460 },
+      position: { x: 200, y: 200 },
       size: { width: 350, height: 320 },
       component: null
     },
     chat: { 
       id: 'chat', title: 'Network_Chat v2.0', icon: <MessageSquare size={14} />,
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 1,
-      position: { x: 410, y: 490 },
-      size: { width: 450, height: 320 },
+      position: { x: 20, y: 390 }, // Под терминалом
+      size: { width: 500, height: 310 },
+      component: null
+    },
+    guestbook: {
+      id: 'guestbook', title: 'Guestbook — Отзывы', icon: <MessageSquare size={14} />,
+      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 11,
+      position: { x: 540, y: 20 }, // Центр-право
+      size: { width: 500, height: 600 },
       component: null
     },
     cava: {
       id: 'cava', title: 'CAVA_SPECTROGRAM', icon: <Disc size={14} />,
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 0,
-      position: { x: 750, y: 480 },
-      size: { width: 300, height: 120 },
+      position: { x: 540, y: 640 }, // Под отзывами
+      size: { width: 500, height: 100 }, // Растянул по ширине отзывов
       component: null
     }
   });
@@ -1344,6 +1450,8 @@ export default function App() {
                 <Notepad />
               ) : win.id === 'chat' ? (
                 <NetworkChat />
+              ) : win.id === 'guestbook' ? (
+                <Guestbook />
               ) : (
                 <div className="p-10 text-center text-primary/20 font-mono tracking-tighter text-4xl">FILE_NOT_FOUND</div>
               )}
