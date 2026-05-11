@@ -24,13 +24,19 @@
         });
     </script>
     <style>
-      /* Тот самый "костыль", который скроет ярлык, если Яндекс его все-таки подсунет */
-      div[style*="absolute"] > a[href*="metrika.yandex.ru"] {
-          display: none !important;
-          visibility: hidden !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-      }
+a[href*="metrika.yandex.ru"], 
+  img[src*="informer.yandex.ru"],
+  img[src*="mc.yandex.ru/watch"],
+  div[style*="absolute"] > a[href*="metrika"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+      pointer-events: none !important;
+      position: absolute !important;
+      left: -9999px !important;
+  }
     </style>
   </head>
   <body>
