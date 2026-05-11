@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: sityarch
+    runtime: node
+    runtimeVersion: 18
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: GEMINI_API_KEY
+        sync: false  # Set this manually in Render dashboard
+      - key: CORS_ORIGIN
+        fromService:
+          type: render_url
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
