@@ -1108,86 +1108,111 @@ const send = async () => {
 
 export default function App() {
   const [songs, setSongs] = useState<Song[]>([]);
-  const [activeWindow, setActiveWindow] = useState<string>('terminal');
-  const [maxZ, setMaxZ] = useState(10);
-  const [isPlaying, setIsPlaying] = useState(false);
   
-  const [isMobileView, setIsMobileView] = useState(false);
-  // Вставляй это ВНУТРИ функции App
-  useEffect(() => {
-    const checkMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
-    if (checkMobile) {
-      setIsMobileView(true);
-      setActiveWindow('terminal');
-    }
-  }, []);
-const getInitialWindows = (): Record<string, WindowState> => ({
-    terminal: { 
-      id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
-      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 10,
-      position: { x: 20, y: 20 }, // Плотно в левый верхний угол
-      size: { width: 500, height: 350 }, // Чуть уменьшил, чтобы освободить место
-      component: null
-    },
-    btop: { 
-      id: 'btop', title: 'btop++ - system monitor', icon: <Activity size={14} />,
-      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 6,
-      position: { x: 100, y: 100 },
-      size: { width: 400, height: 420 },
-      component: null 
-    },
-    code: { 
-      id: 'code', title: 'VS Code - neural_core.ts', icon: <Code size={14} />,
-      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 7,
-      position: { x: 150, y: 150 },
-      size: { width: 600, height: 450 },
-      component: null
-    },
-    music: { 
-      id: 'music', title: 'Music Player', icon: <Music size={14} />,
-      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 5,
-      position: { x: 1060, y: 20 }, // В правый верхний угол
-      size: { width: 280, height: 260 },
-      component: null
-    },
-    social: { 
-      id: 'social', title: 'Connections', icon: <Globe size={14} />,
-      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 4,
-      position: { x: 1060, y: 300 }, // Под плеером
-      size: { width: 280, height: 400 }, 
-      component: null
-    },
-    notepad: { 
-      id: 'notepad', title: 'Brain_Dump.txt', icon: <FileText size={14} />,
-      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 2,
-      position: { x: 200, y: 200 },
-      size: { width: 350, height: 320 },
-      component: null
-    },
-    chat: { 
-      id: 'chat', title: 'Network_Chat v2.0', icon: <MessageSquare size={14} />,
-      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 1,
-      position: { x: 20, y: 390 }, // Под терминалом
-      size: { width: 500, height: 310 },
-      component: null
-    },
-    guestbook: {
-      id: 'guestbook', title: 'Guestbook — Отзывы', icon: <MessageSquare size={14} />,
-      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 11,
-      position: { x: 540, y: 20 }, // Центр-право
-      size: { width: 500, height: 600 },
-      component: null
-    },
-    cava: {
-      id: 'cava', title: 'CAVA_SPECTROGRAM', icon: <Disc size={14} />,
-      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 0,
-      position: { x: 540, y: 640 }, // Под отзывами
-      size: { width: 500, height: 100 }, // Растянул по ширине отзывов
-      component: null
-    }
-  });
+  // 1. Инициализируем мобильный вид СРАЗУ, чтобы не было "прыжка" интерфейса
+  const [isMobileView, setIsMobileView] = useState(isMobile);
+  const [activeWindow, setActiveWindow] = useState<string>('social');
+  const [maxZ, setMaxZ] = useState(20);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // 2. Умная функция создания окон с учетом устройства
+  const getInitialWindows = (): Record<string, WindowState> => {
+    const sw = window.innerWidth;
+    const sh = window.innerHeight;
+
+    // Настройки для мобилки (окно на весь экран)
+    const mobilePos = { x: 0, y: 0 };
+    const mobileSize = { width: sw, height: sh - 130 }; // Оставляем место под шапку и док
+
+    return {
+      guestbook: {
+        id: 'guestbook', title: 'Guestbook — Отзывы', icon: <MessageSquare size={14} />,
+        isOpen: !isMobileView,
+        isMinimized: false, isMaximized: isMobileView, zIndex: 11,
+        position: isMobileView ? mobilePos : { x: 540, y: 20 },
+        size: isMobileView ? mobileSize : { width: 500, height: 600 },
+        component: null
+      },
+      social: { 
+        id: 'social', title: 'Connections', icon: <Globe size={14} />,
+        isOpen: !isMobileView,
+        isMinimized: false, isMaximized: isMobileView, zIndex: 4,
+        position: isMobileView ? mobilePos : { x: 1060, y: 300 },
+        size: isMobileView ? mobileSize : { width: 280, height: 400 }, 
+        component: null
+      },
+      terminal: { 
+        id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
+        isOpen: true, isMinimized: false, isMaximized: isMobileView, zIndex: 10,
+        position: isMobileView ? mobilePos : { x: 20, y: 20 },
+        size: isMobileView ? mobileSize : { width: 500, height: 350 },
+        component: null
+      },
+      btop: { 
+        id: 'btop', title: 'btop++ - system monitor', icon: <Activity size={14} />,
+        isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 6,
+        position: isMobileView ? mobilePos : { x: 100, y: 100 },
+        size: isMobileView ? mobileSize : { width: 400, height: 420 },
+        component: null 
+      },
+      code: { 
+        id: 'code', title: 'VS Code - neural_core.ts', icon: <Code size={14} />,
+        isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 7,
+        position: isMobileView ? mobilePos : { x: 150, y: 150 },
+        size: isMobileView ? mobileSize : { width: 600, height: 450 },
+        component: null
+      },
+      music: { 
+        id: 'music', title: 'Music Player', icon: <Music size={14} />,
+        isOpen: !isMobileView, // На мобилке скрываем при старте для чистоты
+        isMinimized: false, isMaximized: isMobileView, zIndex: 5,
+        position: isMobileView ? mobilePos : { x: 1060, y: 20 },
+        size: isMobileView ? mobileSize : { width: 280, height: 260 },
+        component: null
+      },
+      notepad: { 
+        id: 'notepad', title: 'Brain_Dump.txt', icon: <FileText size={14} />,
+        isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 2,
+        position: isMobileView ? mobilePos : { x: 200, y: 200 },
+        size: isMobileView ? mobileSize : { width: 350, height: 320 },
+        component: null
+      },
+      chat: { 
+        id: 'chat', title: 'Network_Chat v2.0', icon: <MessageSquare size={14} />,
+        isOpen: !isMobileView,
+        isMinimized: false, isMaximized: isMobileView, zIndex: 1,
+        position: isMobileView ? mobilePos : { x: 20, y: 390 },
+        size: isMobileView ? mobileSize : { width: 500, height: 310 },
+        component: null
+      },
+      cava: {
+        id: 'cava', title: 'CAVA_SPECTROGRAM', icon: <Disc size={14} />,
+        isOpen: !isMobileView,
+        isMinimized: false, isMaximized: isMobileView, zIndex: 0,
+        position: isMobileView ? mobilePos : { x: 540, y: 640 },
+        size: isMobileView ? mobileSize : { width: 500, height: 100 },
+        component: null
+      }
+    };
+  };
 
   const [windows, setWindows] = useState<Record<string, WindowState>>(getInitialWindows());
+
+  // Эффект для отслеживания ресайза (если пользователь крутит телефон)
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      if (mobile !== isMobileView) {
+        setIsMobileView(mobile);
+        // При смене режима лучше сбросить окна в дефолт
+        setWindows(getInitialWindows());
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobileView]);
+
+  // Дальше весь остальной код без изменений...
 
   // NOTE: removed an effect that injected `btop.component` into state.
   // Storing React nodes in state and updating them from an effect caused
