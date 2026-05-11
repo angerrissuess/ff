@@ -61,7 +61,7 @@ interface Song {
 }
 
 // --- Components ---
-
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
 // ИЗОЛИРОВАННЫЕ ЧАСЫ: Спасает от лагов
 const TopBarClock = () => {
   const [time, setTime] = useState(new Date());
@@ -1113,7 +1113,14 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   
   const [isMobileView, setIsMobileView] = useState(false);
-  
+  // Вставляй это ВНУТРИ функции App
+  useEffect(() => {
+    const checkMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+    if (checkMobile) {
+      setIsMobileView(true);
+      setActiveWindow('terminal');
+    }
+  }, []);
 const getInitialWindows = (): Record<string, WindowState> => ({
     terminal: { 
       id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
@@ -1325,6 +1332,8 @@ const getInitialWindows = (): Record<string, WindowState> => ({
                 <Notepad />
               ) : activeWin.id === 'chat' ? (
                 <NetworkChat />
+              ) : activeWin.id === 'guestbook' ? ( 
+               <Guestbook />                     
               ) : (
                 <div className="p-10 text-center text-primary/20 font-mono tracking-tighter text-2xl">FILE_NOT_FOUND</div>
               )}
