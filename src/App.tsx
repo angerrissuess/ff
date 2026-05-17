@@ -36,7 +36,9 @@ import {
   Twitch,
   Youtube,
   Gamepad2,
-  Globe
+  Globe,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 // --- Types ---
@@ -637,11 +639,25 @@ system.bootstrap().catch(err => console.error(err));`;
   const highlightCode = (code: string) => {
     let safeCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
-    safeCode = safeCode.replace(/(\/\/.*)$/gm, '<span class="text-[#6a9955]">$1</span>');
-    safeCode = safeCode.replace(/('.*?'|".*?")/g, '<span class="text-[#ce9178]">$1</span>');
-    safeCode = safeCode.replace(/\b(const|let|var|function|async|await|while|if|true|false|new|import|from|return|catch|class|export|private)\b/g, '<span class="text-[#569cd6]">$1</span>');
-    safeCode = safeCode.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="text-[#b5cea8]">$1</span>');
-    safeCode = safeCode.replace(/\b([a-zA-Z0-9_]+)(?=\()/g, '<span class="text-[#dcdcaa]">$1</span>');
+    // Use placeholers to avoid nested replacement issues
+    const tokens: string[] = [];
+    let tokenIndex = 0;
+    const saveToken = (html: string) => {
+      const id = `__TOKEN_${tokenIndex++}__`;
+      tokens.push(html);
+      return id;
+    };
+
+    safeCode = safeCode.replace(/(\/\/.*)$/gm, (m) => saveToken(`<span class="text-[#6a9955]">${m}</span>`));
+    safeCode = safeCode.replace(/('.*?'|".*?")/g, (m) => saveToken(`<span class="text-[#ce9178]">${m}</span>`));
+    safeCode = safeCode.replace(/\b(const|let|var|function|async|await|while|if|true|false|new|import|from|return|catch|class|export|private)\b/g, (m) => saveToken(`<span class="text-[#569cd6]">${m}</span>`));
+    safeCode = safeCode.replace(/\b(\d+(\.\d+)?)\b/g, (m) => saveToken(`<span class="text-[#b5cea8]">${m}</span>`));
+    safeCode = safeCode.replace(/\b([a-zA-Z0-9_]+)(?=\()/g, (m) => saveToken(`<span class="text-[#dcdcaa]">${m}</span>`));
+
+    // Restore tokens
+    tokens.forEach((tokenHtml, index) => {
+      safeCode = safeCode.replace(`__TOKEN_${index}__`, tokenHtml);
+    });
     
     return safeCode;
   };
@@ -656,18 +672,18 @@ system.bootstrap().catch(err => console.error(err));`;
       </div>
       
       <div className="flex-1 overflow-auto p-4 custom-scrollbar" ref={scrollContainerRef}>
-        <div className="flex">
-          <div className="flex flex-col text-[#858585] select-none pr-4 text-right border-r border-[#404040] mr-4 opacity-50">
-            {displayedCode.split('\n').map((_, idx) => (
-              <span key={idx}>{idx + 1}</span>
-            ))}
-          </div>
-          <pre className="whitespace-pre-wrap break-all m-0 font-mono leading-relaxed">
-            <code dangerouslySetInnerHTML={{ 
-              __html: highlightCode(displayedCode) + (isTyping ? '<span class="animate-pulse bg-[#d4d4d4] w-2 h-4 inline-block align-middle ml-0.5"></span>' : '') 
-            }} />
-          </pre>
-        </div>
+        <pre className="m-0 font-mono leading-relaxed whitespace-pre-wrap break-all flex flex-col">
+          {displayedCode.split('\n').map((line, idx, arr) => (
+            <div key={idx} className="flex">
+              <div className="w-8 shrink-0 text-right pr-2 mr-2 text-[#858585] border-r border-[#404040] opacity-50 select-none">
+                {idx + 1}
+              </div>
+              <code dangerouslySetInnerHTML={{
+                __html: highlightCode(line) + (isTyping && idx === arr.length - 1 ? '<span class="animate-pulse bg-[#d4d4d4] w-2 h-4 inline-block align-middle ml-0.5"></span>' : '')
+              }} />
+            </div>
+          ))}
+        </pre>
       </div>
 
       <div className="bg-[#007acc] text-white text-[10px] px-3 py-1 flex justify-between select-none">
@@ -744,8 +760,15 @@ const MusicPlayer: React.FC<{ songs: Song[]; isPlaying: boolean; setIsPlaying: (
   const [progress, setProgress] = useState(0);
   const [shuffle, setShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
+  const [volume, setVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
 
   const currentSong = songs.length > 0 ? songs[currentIdx] : { title: 'Neural Drift', artist: 'LO-FI TERMINAL BITS', url: undefined };
 
@@ -905,6 +928,17 @@ const handleSeek = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLD
           {repeatMode === 'one' && <span className="absolute -top-1 -right-1 text-[8px] font-bold">1</span>}
         </div>
       </div>
+
+      <div className="flex items-center gap-2 px-2 pb-2">
+        {volume === 0 ? <VolumeX size={14} className="text-on-surface-variant" /> : <Volume2 size={14} className="text-on-surface-variant" />}
+        <input
+          type="range"
+          min="0" max="1" step="0.01"
+          value={volume}
+          onChange={(e) => setVolume(parseFloat(e.target.value))}
+          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+        />
+      </div>
     </div>
   );
 };
@@ -1011,7 +1045,7 @@ const send = async () => {
         // Пробуем достать ответ безопасно
         reply = anyData?.choices?.[0]?.message?.content ?? anyData?.choices?.[0]?.message ?? anyData?.choices?.[0]?.text ?? '';
         if (typeof reply === 'object' && reply !== null) {
-          reply = (reply.content ?? JSON.stringify(reply)).toString();
+          reply = ((reply as any).content ?? JSON.stringify(reply)).toString();
         }
       }
 
@@ -1392,7 +1426,7 @@ if (isMobileView) {
         {Object.values(windows).map(win => (
           <button
             key={win.id}
-            onPointerDown={(e) => {
+            onPointerDown={() => {
               // Используем onPointerDown для мгновенного отклика на тач
               if (!win.isOpen) {
                 setWindows(prev => ({ ...prev, [win.id]: { ...prev[win.id], isOpen: true, isMinimized: false } }));
