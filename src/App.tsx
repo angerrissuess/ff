@@ -38,7 +38,8 @@ import {
   Gamepad2,
   Globe,
   Volume2,
-  VolumeX
+  VolumeX,
+  Briefcase
 } from 'lucide-react';
 
 // --- Types ---
@@ -1164,12 +1165,82 @@ const send = async () => {
   );
 };
 
+const ProjectsPortfolio: React.FC = () => {
+  const projects = [
+    {
+      id: 1,
+      title: "82 Agency",
+      type: "Website",
+      description: "Сайт рекламного агентства 82agency.net. Разработан для оптимизации работы с блогерами и поиска рекламодателей. Проект представляет собой полноценную платформу с современным дизайном, удобным интерфейсом и надежной архитектурой.",
+      features: [
+        "Современный, отзывчивый интерфейс",
+        "Удобная навигация и презентация агентства",
+        "Фокус на высокую производительность и UX"
+      ],
+      link: "https://82agency.net/"
+    },
+    {
+      id: 2,
+      title: "Нейросеть-помощник",
+      type: "Telegram Bot",
+      description: "Умный ИИ-ассистент для менеджеров. Telegram-бот, который подключается к аккаунту менеджера и берет на себя роль полноценного ИИ-помощника. Бот анализирует контекст общения, автоматизирует рутинные задачи и помогает вести диалоги с клиентами.",
+      features: [
+        "Интеграция передовых ИИ-моделей (LLM) и RAG архитектуры",
+        "Работа непосредственно на аккаунте менеджера (userbot)",
+        "Высокая безопасность данных и скрытность сложного внутреннего функционала"
+      ],
+      link: null
+    }
+  ];
+
+  return (
+    <div className="flex w-full h-full bg-[#0a0a0a] text-white overflow-x-auto snap-x snap-mandatory custom-scrollbar relative">
+      {projects.map((p, i) => (
+        <div key={p.id} className="min-w-full w-full h-full snap-start snap-always p-6 flex flex-col overflow-y-auto custom-scrollbar">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-primary tracking-tighter">{p.title}</h2>
+              <span className="text-[10px] font-mono tracking-widest text-on-surface-variant uppercase">{p.type}</span>
+            </div>
+            <div className="text-primary/20 text-4xl font-black italic select-none">0{i + 1}</div>
+          </div>
+          
+          <div className="flex-1">
+            <p className="text-sm text-white/80 leading-relaxed mb-6 font-sans">
+              {p.description}
+            </p>
+            
+            <h3 className="text-[11px] font-mono text-primary tracking-widest mb-3 uppercase">Ключевые особенности:</h3>
+            <ul className="space-y-2 mb-6">
+              {p.features.map((f, j) => (
+                <li key={j} className="text-sm text-white/70 flex gap-2">
+                  <span className="text-primary mt-1">▹</span> {f}
+                </li>
+              ))}
+            </ul>
+
+            {p.link && (
+              <a href={p.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded text-primary text-sm hover:bg-primary hover:text-black transition-colors font-bold tracking-wide">
+                View Project <Globe size={14} />
+              </a>
+            )}
+          </div>
+          
+          <div className="mt-8 pt-4 border-t border-white/5 flex justify-center text-[10px] text-white/30 font-mono gap-1 uppercase">
+            <span>Scroll</span> {i < projects.length - 1 ? 'right →' : '← left'} <span>to explore</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export default function App() {
   const [songs, setSongs] = useState<Song[]>([]);
   
   // 1. Инициализируем мобильный вид СРАЗУ, чтобы не было "прыжка" интерфейса
   const [isMobileView, setIsMobileView] = useState(isMobile);
-  const [activeWindow, setActiveWindow] = useState<string>('social');
+  const [activeWindow, setActiveWindow] = useState<string>('projects');
   const [maxZ, setMaxZ] = useState(20);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -1189,10 +1260,17 @@ const getInitialWindows = (): Record<string, WindowState> => {
       size: isMobileView ? mobileSize : { width: 280, height: 400 }, 
       component: null
     },
+    projects: {
+      id: 'projects', title: 'Completed Projects', icon: <Briefcase size={14} />,
+      isOpen: true, isMinimized: false, isMaximized: isMobileView, zIndex: 21,
+      position: isMobileView ? mobilePos : { x: 20, y: 20 },
+      size: isMobileView ? mobileSize : { width: 500, height: 450 },
+      component: null
+    },
     terminal: { 
       id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
-      isOpen: true, isMinimized: false, isMaximized: isMobileView, zIndex: 10,
-      position: isMobileView ? mobilePos : { x: 20, y: 20 },
+      isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 10,
+      position: isMobileView ? mobilePos : { x: 50, y: 50 },
       size: isMobileView ? mobileSize : { width: 500, height: 350 },
       component: null
     },
@@ -1414,6 +1492,8 @@ if (isMobileView) {
               <Notepad />
             ) : activeWin.id === 'chat' ? (
               <NetworkChat />
+            ) : activeWin.id === 'projects' ? (
+              <ProjectsPortfolio />
             ) : (
               <div className="p-10 text-center text-primary/20 font-mono tracking-tighter text-2xl">FILE_NOT_FOUND</div>
             )}
@@ -1540,6 +1620,8 @@ if (isMobileView) {
                 <Notepad />
               ) : win.id === 'chat' ? (
                 <NetworkChat />
+              ) : win.id === 'projects' ? (
+                <ProjectsPortfolio />
               ) : win.id === 'guestbook' ? (
                 <Guestbook />
               ) : (
