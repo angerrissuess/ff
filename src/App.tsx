@@ -1166,6 +1166,15 @@ const send = async () => {
 };
 
 const ProjectsPortfolio: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (containerRef.current) {
+      const width = containerRef.current.clientWidth;
+      containerRef.current.scrollBy({ left: direction === 'right' ? width : -width, behavior: 'smooth' });
+    }
+  };
+
   const projects = [
     {
       id: 1,
@@ -1194,7 +1203,7 @@ const ProjectsPortfolio: React.FC = () => {
   ];
 
   return (
-    <div className="flex w-full h-full bg-[#0a0a0a] text-white overflow-x-auto snap-x snap-mandatory custom-scrollbar relative">
+    <div ref={containerRef} className="flex w-full h-full bg-[#0a0a0a] text-white overflow-x-auto snap-x snap-mandatory custom-scrollbar relative">
       {projects.map((p, i) => (
         <div key={p.id} className="min-w-full w-full h-full snap-start snap-always p-6 flex flex-col overflow-y-auto custom-scrollbar">
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
@@ -1226,8 +1235,10 @@ const ProjectsPortfolio: React.FC = () => {
             )}
           </div>
           
-          <div className="mt-8 pt-4 border-t border-white/5 flex justify-center text-[10px] text-white/30 font-mono gap-1 uppercase">
-            <span>Scroll</span> {i < projects.length - 1 ? 'right →' : '← left'} <span>to explore</span>
+          <div className="mt-8 pt-4 border-t border-white/5 flex justify-center items-center text-[10px] text-white/50 font-mono gap-4 uppercase select-none">
+            <button onClick={() => scroll('left')} className="hover:text-primary transition-colors hover:bg-white/10 px-3 py-1.5 rounded bg-white/5 disabled:opacity-30" disabled={i === 0}>← PREV</button>
+            <span className="text-white/30">SCROLL TO EXPLORE</span>
+            <button onClick={() => scroll('right')} className="hover:text-primary transition-colors hover:bg-white/10 px-3 py-1.5 rounded bg-white/5 disabled:opacity-30" disabled={i === projects.length - 1}>NEXT →</button>
           </div>
         </div>
       ))}
@@ -1243,6 +1254,7 @@ export default function App() {
   const [activeWindow, setActiveWindow] = useState<string>('projects');
   const [maxZ, setMaxZ] = useState(20);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
 
   // 2. Умная функция создания окон с учетом устройства
 const getInitialWindows = (): Record<string, WindowState> => {
@@ -1254,23 +1266,23 @@ const getInitialWindows = (): Record<string, WindowState> => {
   return {
     social: { 
       id: 'social', title: 'Connections', icon: <Globe size={14} />,
-      isOpen: true, // Сделаем его открытым сразу
+      isOpen: true,
       isMinimized: false, isMaximized: isMobileView, zIndex: 20,
-      position: isMobileView ? mobilePos : { x: 1060, y: 300 },
+      position: isMobileView ? mobilePos : { x: 1140, y: 320 },
       size: isMobileView ? mobileSize : { width: 280, height: 400 }, 
       component: null
     },
     projects: {
       id: 'projects', title: 'Completed Projects', icon: <Briefcase size={14} />,
       isOpen: true, isMinimized: false, isMaximized: isMobileView, zIndex: 21,
-      position: isMobileView ? mobilePos : { x: 20, y: 20 },
-      size: isMobileView ? mobileSize : { width: 500, height: 450 },
+      position: isMobileView ? mobilePos : { x: 40, y: 40 },
+      size: isMobileView ? mobileSize : { width: 500, height: 350 },
       component: null
     },
     terminal: { 
       id: 'terminal', title: 'terminal — user@portfolio:~', icon: <TerminalIcon size={14} />,
       isOpen: false, isMinimized: false, isMaximized: isMobileView, zIndex: 10,
-      position: isMobileView ? mobilePos : { x: 50, y: 50 },
+      position: isMobileView ? mobilePos : { x: 80, y: 80 },
       size: isMobileView ? mobileSize : { width: 500, height: 350 },
       component: null
     },
@@ -1278,7 +1290,7 @@ const getInitialWindows = (): Record<string, WindowState> => {
       id: 'guestbook', title: 'Guestbook — Отзывы', icon: <MessageSquare size={14} />,
       isOpen: !isMobileView,
       isMinimized: false, isMaximized: isMobileView, zIndex: 11,
-      position: isMobileView ? mobilePos : { x: 540, y: 20 },
+      position: isMobileView ? mobilePos : { x: 600, y: 40 },
       size: isMobileView ? mobileSize : { width: 500, height: 600 },
       component: null
     },
@@ -1300,7 +1312,7 @@ const getInitialWindows = (): Record<string, WindowState> => {
       id: 'music', title: 'Music Player', icon: <Music size={14} />,
       isOpen: !isMobileView,
       isMinimized: false, isMaximized: isMobileView, zIndex: 5,
-      position: isMobileView ? mobilePos : { x: 1060, y: 20 },
+      position: isMobileView ? mobilePos : { x: 1140, y: 40 },
       size: isMobileView ? mobileSize : { width: 280, height: 260 },
       component: null
     },
@@ -1315,7 +1327,7 @@ const getInitialWindows = (): Record<string, WindowState> => {
       id: 'chat', title: 'Network_Chat v2.0', icon: <MessageSquare size={14} />,
       isOpen: !isMobileView,
       isMinimized: false, isMaximized: isMobileView, zIndex: 1,
-      position: isMobileView ? mobilePos : { x: 20, y: 390 },
+      position: isMobileView ? mobilePos : { x: 40, y: 420 },
       size: isMobileView ? mobileSize : { width: 500, height: 310 },
       component: null
     },
@@ -1323,7 +1335,7 @@ const getInitialWindows = (): Record<string, WindowState> => {
       id: 'cava', title: 'CAVA_SPECTROGRAM', icon: <Disc size={14} />,
       isOpen: !isMobileView,
       isMinimized: false, isMaximized: isMobileView, zIndex: 0,
-      position: isMobileView ? mobilePos : { x: 540, y: 640 },
+      position: isMobileView ? mobilePos : { x: 600, y: 660 },
       size: isMobileView ? mobileSize : { width: 500, height: 100 },
       component: null
     }
@@ -1641,12 +1653,45 @@ if (isMobileView) {
       </button>
 
       <footer className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex items-center justify-center">
+        <AnimatePresence>
+          {isStartMenuOpen && (
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              className="absolute bottom-20 left-4 w-64 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-3 flex flex-col gap-1"
+            >
+              <div className="text-[10px] text-white/50 font-mono tracking-widest uppercase mb-2 px-2 pb-2 border-b border-white/5">Applications</div>
+              <div className="max-h-[350px] overflow-y-auto custom-scrollbar flex flex-col gap-1 pr-1">
+                {(Object.values(windows) as WindowState[]).map(win => (
+                  <button
+                    key={win.id}
+                    onClick={() => {
+                      toggleWindow(win.id);
+                      setIsStartMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-3 p-2 rounded-xl transition-colors text-left ${activeWindow === win.id && !win.isMinimized ? 'bg-white/10' : 'hover:bg-white/5'}`}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-primary shrink-0">
+                      {win.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold text-white leading-none truncate">{win.id.toUpperCase()}</div>
+                      <div className="text-[9px] font-mono text-white/50 mt-1 truncate">{win.title}</div>
+                    </div>
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: win.isOpen && !win.isMinimized ? '#22c55e' : 'transparent' }} />
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <motion.div 
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="bg-black/80 backdrop-blur-xl p-2 rounded-2xl flex items-center gap-3 px-4 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.8)]"
         >
-          <DockItem icon={<LayoutGrid size={24} />} label="Apps" />
+          <DockItem icon={<LayoutGrid size={24} />} label="Apps" onClick={() => setIsStartMenuOpen(!isStartMenuOpen)} focused={isStartMenuOpen} />
           <div className="h-8 w-[1px] bg-white/10 mx-1"></div>
           {(Object.values(windows) as WindowState[]).map(win => (
             <DockItem 
